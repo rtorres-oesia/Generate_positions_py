@@ -1,33 +1,33 @@
 import json
 
-def queryJson(pathFile):
-	with open(pathFile) as file:
-		data = json.load(file)
 
-		result = [x for x in data if 
-			  	x["ID_PASILLO"]==5 and
-			  	x["LADO"]==1 and
-			  	x["POSICION_X"]==23 and
-			  	x["POSICION_Y"]==8 and
-			 	x["POSICION_Z"]==1]
-	
-	file.close
+def queryJson(*args):
+    if args and len(args[0]) == 6:
+        pathfile=str(args[0][0]).strip()
+        with open(pathfile) as file:
+            data = json.load(file)
 
-	#return "id_posicion= " + str(result[0]["ID_POSICION"]) + " Descripcion = " + result[0]["DESCRIPCION"]
-	return str(result[0]["ID_POSICION"])
+            result = [
+                x
+                for x in data
+                if x["ID_PASILLO"] == args[0][1]
+                and x["LADO"] == args[0][2]
+                and x["POSICION_X"] == args[0][3]
+                and x["POSICION_Y"] == args[0][4]
+                and x["POSICION_Z"] == args[0][5]
+            ]
+
+        file.close
+
+        idPosicion = str(result[0]["ID_POSICION"]) if len(result) > 0 else ""
+    else:
+        idPosicion = ""
+
+    return idPosicion
 
 
-	
-
-
-
-
-
-
-
-
-#For Examples
-datos_positions =  """
+# For Examples
+datos_positions = """
 {
 		"ID_POSICION": 20010010422,
 		"ID_INSTALACION": 1386,

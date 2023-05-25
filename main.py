@@ -9,15 +9,18 @@ pathJSON = "C:/WorkPlace/Phyton/bck_grupo_posicion_JSON.json"
 # pathExcelLocation = 'C:/WorkPlace/Phyton/OyshoLocation_complete.xlsx'
 pathExcelLocation = "C:/WorkPlace/Phyton/OyshoLocation.xlsx"
 sheet_name_param = "location"
+columns_for_query = "B,C"
 
 # Constants
 _consHeaderLoc = "LocationCode"
 _consHeaderLane = "Lane number"
+_consFile_IdInstalacion = "38"
 
 # Parameter class
 isContinue = True
 lane = "0"
 rowExcelCount = 0
+isChangeAisle = False
 
 # endregion
 
@@ -32,7 +35,10 @@ if isContinue:
     # Excel in memory
     # Get two columns in sheet
     df = pd.read_excel(
-        pathExcelLocation, sheet_name=sheet_name_param, index_col=None, usecols="B, C"
+        pathExcelLocation,
+        sheet_name=sheet_name_param,
+        index_col=None,
+        usecols=columns_for_query,
     )
 
     # Get total rows in Excel; Does not take header into account
@@ -43,14 +49,19 @@ if isContinue:
     aisle = int(str(df.iloc[1][_consHeaderLoc]).split("-")[1])
     lane = str(df.iloc[1][_consHeaderLane])
 
-    # Initialize  aisle & Lane
-    aisleQuery = 1
+    # Initialize aisle & Lane
     # Ex: Aisle 1 - Lane 1 = 101; aisle 1 - Lane 2 = 201; Aisle 2 - Lane 1 =
     laneCount = 100
+    # First aisle for query
+    aisleQuery = 1
 
     # Loop excel
     for x in range(row_cont):
-        loc_value = str(str(df.iloc[x][_consHeaderLoc]).strip()).split("-")
+        # To display row information and generate file
+        location = str(df.iloc[x][_consHeaderLoc]).strip()
+
+        # To use in the process
+        loc_value = location.split("-")
         lane_value = str(df.iloc[x][_consHeaderLane]).strip()
 
         # For errors logs
@@ -58,30 +69,103 @@ if isContinue:
 
         # Check if the retrieved fields are not empty and the positions array have enough information
         if lane_value.split() and (loc_value[0].split() and len(loc_value) == 4):
+            # Recovery initial aisle and check if there is change to the following
+            aisle_value = int(loc_value[1])
+            if aisle != aisle_value:
+                aisle = aisle_value
+                aisleQuery = aisleQuery + 1 if aisle_value % 2 != 0 else aisleQuery
+
+                isChangeAisle = True
+            else:
+                isChangeAisle = False
+
             # Check change lane
             if lane != lane_value:
                 lane = lane_value
-                laneCount += 100
+                # With the lane change, the lane resets to 100
+                laneCount = 100 if isChangeAisle else laneCount + 100
 
-            # Recovery initial laneCount
-            aisle_value = int(loc_value[1])
+            # Change real aisle value for query in table dbo.POSICION
+            finalAisle = laneCount + aisleQuery
 
             # Get aisle foreach iteration for calculate side
-            side = 2 if aisleQuery % 2 == 0 else 1
+            finalSide = 2 if aisle_value % 2 == 0 else 1
 
-        # ToDo: Guardar ficheros con errores
-        # else:
+            # Get POS_X
+            finalPosX = int(loc_value[2])
 
-        # region Json Query
+            # Get POS_Y
+            arrayYZ = loc_value[3].split("_")
+            if arrayYZ and len(arrayYZ) == 2:
+                finalPosY = int(arrayYZ[0])
+                finalPosZ = int(arrayYZ[1])
 
-        print(fn.queryJson(pathFile=pathJSON))
+                isContinue = True
+            else:
+                isContinue = False
 
-        # endregion
+            if isContinue:
+                # region Json Query
+                # TODO Cuando tengamos la tabla final quitar todo el código siguiente para enviar el finalAsile que contenga el id de pastilla
+                finalAisleSTR = str(finalAisle)
+                idPosicion = fn.queryJson(
+                    [
+                        pathJSON,
+                        int(finalAisleSTR[-2:]),
+                        finalSide,
+                        finalPosX,
+                        finalPosY,
+                        finalPosZ,
+                    ]
+                )
 
-        # region Final sequence
+                # Código final (como parte del ToDo)
+                # idPosicion = fn.queryJson(
+                #     [pathJSON, finalAisle, finalSide, finalPosX, finalPosY, finalPosZ]
+                # )
 
-        aisleQuery += 1
+                if idPosicion:
+                    print(
+                        "Processing! idPosicion: "
+                        + idPosicion
+                        + "Excel_Loc: "
+                        + location
+                        + " Aisle: "
+                        + str(finalAisle)
+                        + " Side: "
+                        + str(finalSide)
+                        + " Lane: "
+                        + str(laneCount)
+                    )
+                else:
+                    print(
+                        "Location: "
+                        + location
+                        + " not found in query to dbo.Position. Excel row: "
+                        + str(rowExcelCount)
+                    )
 
-        # endregion
+                # endregion
+
+            else:
+                print(
+                    "Error retrieving location information "
+                    + location
+                    + " in row number: "
+                    + str(rowExcelCount)
+                )
+
+        # Print error
+        else:
+            print(
+                "Error to recovery Excel value. In row number: "
+                + str(rowExcelCount)
+                + " Location value: "
+                + location
+                + "Lane value: "
+                + lane_value
+            )
 
     # endregion
+else:
+    print("Some of the files to recover data do not exist.")
