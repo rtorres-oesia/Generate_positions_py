@@ -8,25 +8,33 @@ from os.path import exists
 pathJSON = "C:/WorkPlace/Phyton/bck_grupo_posicion_JSON.json"
 # pathExcelLocation = 'C:/WorkPlace/Phyton/OyshoLocation_complete.xlsx'
 pathExcelLocation = "C:/WorkPlace/Phyton/OyshoLocation.xlsx"
+pathOutputFolder = "C:/WorkPlace/Phyton/Output/"
 sheet_name_param = "location"
 columns_for_query = "B,C"
 
 # Constants
 _consHeaderLoc = "LocationCode"
 _consHeaderLane = "Lane number"
-_consFile_IdInstalacion = "38"
+
+_consIdInstalacion = "38"
 
 # Parameter class
 isContinue = True
 lane = "0"
 rowExcelCount = 0
 isChangeAisle = False
+isChangeOutputFile = False
+
+lstPositions = []
 
 # endregion
 
 # Check files exists
 if not exists(pathJSON) or not exists(pathExcelLocation):
     isContinue: False
+
+# Output folder management
+isContinue = fn.createFolder(pathOutputFolder)
 
 # Algorithm locations
 if isContinue:
@@ -73,7 +81,19 @@ if isContinue:
             aisle_value = int(loc_value[1])
             if aisle != aisle_value:
                 aisle = aisle_value
-                aisleQuery = aisleQuery + 1 if aisle_value % 2 != 0 else aisleQuery
+
+                # You can only change aisles when you have traveled both sides of each aisle
+                if aisle_value % 2 != 0:
+                    aisleQuery += 1
+                    if len(lstPositions) > 0:
+                        # Generate file with aisle values
+                        fn.generateFile(
+                            str(finalAisle)[-2:], pathOutputFolder, lstPositions
+                        )
+                        # Variable reboot for save positions
+                        lstPositions = []
+
+                        print("Asile: " + str(finalAisle)[-2:] + " finished!")
 
                 isChangeAisle = True
             else:
@@ -125,6 +145,18 @@ if isContinue:
                 # )
 
                 if idPosicion:
+                    query = str(
+                        "("
+                        + idPosicion
+                        + ","
+                        + _consIdInstalacion
+                        + ",'"
+                        + location
+                        + "')"
+                    )
+
+                    lstPositions.append(query)
+
                     print(
                         "Processing! idPosicion: "
                         + idPosicion
@@ -166,6 +198,14 @@ if isContinue:
                 + lane_value
             )
 
+    # Generate file with final aisle values
+    if len(lstPositions) > 0:
+        fn.generateFile(str(finalAisle)[-2:], pathOutputFolder, lstPositions)
+        # Variable reboot for save positions
+        lstPositions = []
+
+    print("Process succeed! Total positions in loop from Excel: " + str(rowExcelCount))
+
     # endregion
 else:
-    print("Some of the files to recover data do not exist.")
+    print("Error at the beginning of the process and cannot continue.")
