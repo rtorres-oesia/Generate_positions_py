@@ -7,6 +7,32 @@ _consFileExtension = ".sql"
 
 # endregion
 
+lstParameters = []
+
+
+def queryParameterJson(pathFile):
+    with open(pathFile) as file:
+        parameters = json.load(file)
+
+        pathFile = parameters["pathJSON"]
+        lstParameters.append(pathFile)
+
+        pathExcel = parameters["pathExcelLocation"]
+        lstParameters.append(pathExcel)
+
+        pathExitFolder = parameters["pathOutputFolder"]
+        lstParameters.append(pathExitFolder)
+
+        sheet_name = parameters["sheet_name_param"]
+        lstParameters.append(sheet_name)
+
+        columns_query = parameters["columns_for_query"]
+        lstParameters.append(columns_query)
+
+        file.close
+
+    return lstParameters
+
 
 def createFolder(pathFolder):
     if not os.path.exists(pathFolder):
@@ -26,7 +52,7 @@ def generateFile(asileInt, pathOutputFolder, lstLines):
     f.close()
 
 
-def queryJson(*args):
+def queryPositionJson(*args):
     if args and len(args[0]) == 6:
         pathfile = str(args[0][0]).strip()
         with open(pathfile) as file:

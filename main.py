@@ -5,12 +5,14 @@ from os.path import exists
 # region Parameter
 
 # input parameters
-pathJSON = "C:/WorkPlace/Phyton/bck_grupo_posicion_JSON.json"
+lstParameters = fn.queryParameterJson("C:/WorkPlace/Phyton/parameters.json")
+
+pathJSON = lstParameters[0]
 # pathExcelLocation = 'C:/WorkPlace/Phyton/OyshoLocation_complete.xlsx'
-pathExcelLocation = "C:/WorkPlace/Phyton/OyshoLocation.xlsx"
-pathOutputFolder = "C:/WorkPlace/Phyton/Output/"
-sheet_name_param = "location"
-columns_for_query = "B,C"
+pathExcelLocation = lstParameters[1]
+pathOutputFolder = lstParameters[2]
+sheet_name_param = lstParameters[3]
+columns_for_query = lstParameters[4]
 
 # Constants
 _consHeaderLoc = "LocationCode"
@@ -38,6 +40,7 @@ isContinue = fn.createFolder(pathOutputFolder)
 
 # Algorithm locations
 if isContinue:
+
     # region Excel management
 
     # Excel in memory
@@ -128,7 +131,7 @@ if isContinue:
                 # region Json Query
                 # TODO Cuando tengamos la tabla final quitar todo el código siguiente para enviar el finalAsile que contenga el id de pastilla
                 finalAisleSTR = str(finalAisle)
-                idPosicion = fn.queryJson(
+                idPosicion = fn.queryPositionJson(
                     [
                         pathJSON,
                         int(finalAisleSTR[-2:]),
@@ -139,12 +142,7 @@ if isContinue:
                     ]
                 )
 
-                # Código final (como parte del ToDo)
-                # idPosicion = fn.queryJson(
-                #     [pathJSON, finalAisle, finalSide, finalPosX, finalPosY, finalPosZ]
-                # )
-
-                if idPosicion:
+                if idPosicion: 
                     query = str(
                         "("
                         + idPosicion
@@ -160,7 +158,7 @@ if isContinue:
                     print(
                         "Processing! idPosicion: "
                         + idPosicion
-                        + "Excel_Loc: "
+                        + " Excel_Loc: "
                         + location
                         + " Aisle: "
                         + str(finalAisle)
