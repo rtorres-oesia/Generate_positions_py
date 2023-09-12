@@ -16,18 +16,19 @@ columns_for_query = lstParameters[4]
 
 # Constants
 _consHeaderLoc = "LocationCode"
-_consHeaderLane = "Lane number"
-
 _consIdInstalacion = "38"
 
 # Parameter class
 isContinue = True
-lane = "0"
 rowExcelCount = 0
 isChangeAisle = False
+isChangeLane = False
 isChangeOutputFile = False
 
+posXLane = 0
+
 lstPositions = []
+lstLane = [12, 24]
 
 # endregion
 
@@ -40,7 +41,6 @@ isContinue = fn.createFolder(pathOutputFolder)
 
 # Algorithm locations
 if isContinue:
-
     # region Excel management
 
     # Excel in memory
@@ -58,7 +58,6 @@ if isContinue:
 
     # Get first aisle&lane before Excel loop
     aisle = int(str(df.iloc[1][_consHeaderLoc]).split("-")[1])
-    lane = str(df.iloc[1][_consHeaderLane])
 
     # Initialize aisle & Lane
     # Ex: Aisle 1 - Lane 1 = 101; aisle 1 - Lane 2 = 201; Aisle 2 - Lane 1 =
@@ -73,13 +72,12 @@ if isContinue:
 
         # To use in the process
         loc_value = location.split("-")
-        lane_value = str(df.iloc[x][_consHeaderLane]).strip()
 
         # For errors logs
         rowExcelCount += 1
 
         # Check if the retrieved fields are not empty and the positions array have enough information
-        if lane_value.split() and (loc_value[0].split() and len(loc_value) == 4):
+        if loc_value[0].split() and len(loc_value) == 4:
             # Recovery initial aisle and check if there is change to the following
             aisle_value = int(loc_value[1])
             if aisle != aisle_value:
@@ -102,21 +100,6 @@ if isContinue:
             else:
                 isChangeAisle = False
 
-            # Check change lane
-            if lane != lane_value:
-                lane = lane_value
-                # With the lane change, the lane resets to 100
-                laneCount = 100 if isChangeAisle else laneCount + 100
-
-            # Change real aisle value for query in table dbo.POSICION
-            finalAisle = laneCount + aisleQuery
-
-            # Get aisle foreach iteration for calculate side
-            finalSide = 2 if aisle_value % 2 == 0 else 1
-
-            # Get POS_X
-            finalPosX = int(loc_value[2])
-
             # Get POS_Y
             arrayYZ = loc_value[3].split("_")
             if arrayYZ and len(arrayYZ) == 2:
@@ -128,21 +111,42 @@ if isContinue:
                 isContinue = False
 
             if isContinue:
+                # Check change lane
+                # Get POS_X
+                finalPosX = int(loc_value[2])
+
+                if posXLane != finalPosX:
+                    isChangeLane = False
+
+                if finalPosX in lstLane and not isChangeLane:
+                    isChangeLane = True
+                    posXLane = finalPosX
+                    # With the lane change, the lane resets to 100
+                    laneCount = 100 if isChangeAisle else laneCount + 100
+
+                # Change real aisle value for query in table dbo.POSICION
+                finalAisle = laneCount + aisleQuery
+
+                # Get aisle foreach iteration for calculate side
+                finalSide = 2 if aisle_value % 2 == 0 else 1
+
                 # region Json Query
                 # TODO Cuando tengamos la tabla final quitar todo el código siguiente para enviar el finalAsile que contenga el id de pastilla
                 finalAisleSTR = str(finalAisle)
-                idPosicion = fn.queryPositionJson(
-                    [
-                        pathJSON,
-                        int(finalAisleSTR[-2:]),
-                        finalSide,
-                        finalPosX,
-                        finalPosY,
-                        finalPosZ,
-                    ]
-                )
+                # idPosicion = fn.queryPositionJson(
+                #     [
+                #         pathJSON,
+                #         int(finalAisleSTR[-2:]),
+                #         finalSide,
+                #         finalPosX,
+                #         finalPosY,
+                #         finalPosZ,
+                #     ]
+                # )
+                
+                idPosicion = '1111111'
 
-                if idPosicion: 
+                if idPosicion:
                     query = str(
                         "("
                         + idPosicion
@@ -192,8 +196,6 @@ if isContinue:
                 + str(rowExcelCount)
                 + " Location value: "
                 + location
-                + "Lane value: "
-                + lane_value
             )
 
     # Generate file with final aisle values
