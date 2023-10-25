@@ -39,7 +39,7 @@ lstPositions = []
 
 # Check files exists
 if not exists(pathJSON) or not exists(pathExcelLocation):
-    isContinue: False
+    isContinue = False
 
 if isContinue:
     # Output folder management
@@ -143,7 +143,7 @@ if isContinue:
                         # With the lane change, the lane resets to 100
                         laneCount = 100 if isChangeAisle else laneCount + 100
                     else:
-                        posXQuery += 1 
+                        posXQuery += 1
 
                 # Change real aisle value for query in table dbo.POSICION
                 finalAisle = laneCount + aisleQuery
@@ -227,8 +227,8 @@ if isContinue:
 
     # Generate file with final aisle values
     if len(lstPositions) > 0:
-        fn.generateFile(str(finalAisle), pathOutputFolder, lstPositions)
-        # fn.generateFile(str(finalAisle)[-2:], pathOutputFolder, lstPositions)
+        # fn.generateFile(str(finalAisle), pathOutputFolder, lstPositions)
+        fn.generateFile(str(finalAisle)[-2:], pathOutputFolder, lstPositions)
         # Variable reboot for save positions
         lstPositions = []
 
@@ -236,4 +236,4 @@ if isContinue:
 
     # endregion
 else:
-    print("Folder: " + pathOutputFolder + " is not created!")
+    print("Error: One or more of the files to be processed does not exist!")
