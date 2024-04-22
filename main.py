@@ -68,11 +68,15 @@ if isContinue:
 	# Get first aisle&lane before Excel loop
 	aisle = int(str(df.iloc[1][_consHeaderLoc]).split("-")[1])
 
+
 	# Initialize aisle & Lane
 	# Ex: Aisle 1 - Lane 1 = 101; aisle 1 - Lane 2 = 201; Aisle 2 - Lane 1 =
 	laneCount = 100
 	# First aisle for query
 	aisleQuery = 1
+
+	####Prueba#####
+	#aisleQuery = 47
 
 	# Initialize counter for X positions that do not exist in the ITX database
 	posXDisabledCount = fn.rebootDisableXList()
@@ -87,9 +91,9 @@ if isContinue:
 			# To display row information and generate file
 			location = str(df.iloc[x][_consHeaderLoc]).strip()
 
-			if location == 'HAI_002-005-05_1':
-				print("Posicion")
-			
+			if location == "HAI-042-024-01_1":
+				print("chivato")
+
 			# To use in the process
 			loc_value = location.split("-")
 
@@ -139,12 +143,14 @@ if isContinue:
 
 					# Check the posX change to increase the counter and be able to reset it with lane changes
 					if posXInitial != finalPosX:
+						posXSkipOne = posXInitial
 						posXInitial = finalPosX
 						if (
 							fn.isChangeLane(
 								laneCount, (posXQuery + posXDisabledCompare)
 							)
-							or isChangeAisle
+							or isChangeAisle 
+							# or (finalPosX == 24 or finalPosX == 47 or finalPosX == 75)
 						):
 							# Reboot variables
 							posXDisabledCount = fn.rebootDisableXList()
@@ -153,7 +159,10 @@ if isContinue:
 							# With the lane change, the lane resets to 100
 							laneCount = 100 if isChangeAisle else laneCount + 100
 						else:
-							posXQuery += 1
+							if(finalPosX - posXSkipOne) == 1:
+								posXQuery += 1
+							else:
+								posXQuery += finalPosX - posXSkipOne
 
 					# Change real aisle value for query in table dbo.POSICION
 					finalAisle = laneCount + aisleQuery
@@ -195,6 +204,9 @@ if isContinue:
 						)
 
 						lstPositions.append(query)
+
+						# if idPosicion == "202240221312" or idPosicion == "202110221322":
+						# 	print("chivato")
 
 						print(
 							"Processing! idPosicion: "
