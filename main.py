@@ -91,8 +91,8 @@ if isContinue:
 			# To display row information and generate file
 			location = str(df.iloc[x][_consHeaderLoc]).strip()
 
-			if location == "HAI-042-024-01_1":
-				print("chivato")
+			# if location == "HAI-037-002-01_1" or location == "HAI-042-002-01_1" or location == "HAI-006-098-01_2":
+			# 	print("chivato")
 
 			# To use in the process
 			loc_value = location.split("-")
@@ -164,6 +164,10 @@ if isContinue:
 							else:
 								posXQuery += finalPosX - posXSkipOne
 
+					# Para el inicio de estanteria que existe en base de datos el posX
+					if laneCount == 100 and (posXQuery==1 and finalPosX > 1):
+						posXQuery += finalPosX - posXQuery
+					
 					# Change real aisle value for query in table dbo.POSICION
 					finalAisle = laneCount + aisleQuery
 

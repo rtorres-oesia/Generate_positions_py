@@ -14,7 +14,7 @@ _consFileExtension = ".sql"
 # endregion
 
 lstParameters = []
-dictionaryLanes = {100: 23, 200: 23, 300: 28}
+dictionaryLanes = {100: 23, 200: 23, 300: 28, 400:23, 500: 28, 600: 20}
 
 
 def queryParameterJson(pathFile):
